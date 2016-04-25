@@ -150,8 +150,24 @@ function dstar_proto.dissector(buffer,pinfo,tree)
           dstar_tree:add(dstar_ambe_data, "AMBE Data: " .. ambe_data)
 
           local dstar_slow_data = buffer(24,3)
-          local slow_data = tostring(dstar_slow_data)
-          dstar_tree:add(dstar_slow_data, "Slow Data: " .. slow_data)
+          local first_byte = bit.bxor(buffer(24,1):uint(), 0x70)
+          local second_byte = bit.bxor(buffer(25,1):uint(), 0x4f)
+          local third_byte = bit.bxor(buffer(26,1):uint(), 0x93)
+          local slow_data_tree = dstar_tree:add(dstar_slow_data, "Slow data: 0x" .. tostring(dstar_slow_data) .. " scrambled / 0x" .. string.format("%02x%02x%02x", first_byte, second_byte, third_byte) .. " descrambled")
+          if first_byte >= 0x31 and first_byte <= 0x35 then
+             slow_data_tree:add(dstar_slow_data, "Type: GPS information")
+             slow_data_tree:add(dstar_slow_data, "Length: " .. string.format("%u", first_byte-0x30) .. " octets")
+             slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c", second_byte, third_byte))
+          elseif first_byte >= 0x40 and first_byte <= 0x43 then
+             slow_data_tree:add(dstar_slow_data, "Type: Text message")
+             slow_data_tree:add(dstar_slow_data, "Sequence No: " .. string.format("%u", first_byte-0x40))
+             slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c", second_byte, third_byte))
+          elseif first_byte == 0xc2 then
+             slow_data_tree:add(dstar_slow_data, "Type: Code Squelch Data")
+             slow_data_tree:add(dstar_slow_data, "ID: " .. string.format("%c", second_byte))
+          else
+             slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c%c", first_byte, second_byte, third_byte))
+          end
 
        end
 
@@ -162,4 +178,4 @@ end
 -- load the udp.port table
 udp_table = DissectorTable.get("udp.port")
 -- register our protocol to handle udp port 10002
-udp_table:add(10002,dstar_proto)
+udp_table:add(30001,dstar_proto)
