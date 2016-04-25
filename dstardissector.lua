@@ -72,7 +72,56 @@ function dstar_proto.dissector(buffer,pinfo,tree)
        dstar_tree:add(dstar_frame_counter, "Frame Counter: " .. dstar_frame_counter:uint() .. " (0x" .. dstar_frame_counter .. ")")
 
        if frame_type == "Configuration Frame" then
-          local dstar_flags = buffer(15, 3)
+          local dstar_flag1 = buffer(15, 1)
+          local flag1_tree = dstar_tree:add(dstar_flag1, "Flag 1: 0x" .. tostring(dstar_flag1))
+          if dstar_flag1:bitfield(0,1) == 0 then
+             flag1_tree:add(dstar_flag1, string.format('%u... .... = Ignored: Not set', dstar_flag1:bitfield(0,1)))
+          else
+             flag1_tree:add(dstar_flag1, string.format('%u... .... = Ignored: Set', dstar_flag1:bitfield(0,1)))
+          end
+          if dstar_flag1:bitfield(1,1) == 0 then
+             flag1_tree:add(dstar_flag1, string.format('.%u.. .... = Voice communication', dstar_flag1:bitfield(1,1)))
+          else
+             flag1_tree:add(dstar_flag1, string.format('.%u.. .... = Data communication', dstar_flag1:bitfield(1,1)))
+          end
+          if dstar_flag1:bitfield(2,1) == 0 then
+             flag1_tree:add(dstar_flag1, string.format('..%u. .... = Communication between terminals', dstar_flag1:bitfield(2,1)))
+          else
+             flag1_tree:add(dstar_flag1, string.format('..%u. .... = Communication through repeater', dstar_flag1:bitfield(2,1)))
+          end
+          if dstar_flag1:bitfield(3,1) == 0 then
+             flag1_tree:add(dstar_flag1, string.format('...%u .... = Communication interruption: Not set', dstar_flag1:bitfield(3,1)))
+          else
+             flag1_tree:add(dstar_flag1, string.format('...%u .... = Communication interruption: Set', dstar_flag1:bitfield(3,1)))
+          end
+          if dstar_flag1:bitfield(4,1) == 0 then
+             flag1_tree:add(dstar_flag1, string.format('.... %u... = Urgent priority signal: Not set', dstar_flag1:bitfield(4,1)))
+          else
+             flag1_tree:add(dstar_flag1, string.format('.... %u... = Urgent priority signal: Set', dstar_flag1:bitfield(4,1)))
+          end
+          if dstar_flag1:bitfield(5,3) == 0 then
+             flag1_tree:add(dstar_flag1, string.format('.... .%u%u%u = Control Flag: No information', dstar_flag1:bitfield(5,1), dstar_flag1:bitfield(6,1), dstar_flag1:bitfield(7,1)))
+          elseif dstar_flag1:bitfield(5,3) == 1 then
+             flag1_tree:add(dstar_flag1, string.format('.... .%u%u%u = Control Flag: Relay unavailable', dstar_flag1:bitfield(5,1), dstar_flag1:bitfield(6,1), dstar_flag1:bitfield(7,1)))
+          elseif dstar_flag1:bitfield(5,3) == 2 then
+             flag1_tree:add(dstar_flag1, string.format('.... .%u%u%u = Control Flag: No reply', dstar_flag1:bitfield(5,1), dstar_flag1:bitfield(6,1), dstar_flag1:bitfield(7,1)))
+          elseif dstar_flag1:bitfield(5,3) == 3 then
+             flag1_tree:add(dstar_flag1, string.format('.... .%u%u%u = Control Flag: ACK', dstar_flag1:bitfield(5,1), dstar_flag1:bitfield(6,1), dstar_flag1:bitfield(7,1)))
+          elseif dstar_flag1:bitfield(5,3) == 4 then
+             flag1_tree:add(dstar_flag1, string.format('.... .%u%u%u = Control Flag: Resend', dstar_flag1:bitfield(5,1), dstar_flag1:bitfield(6,1), dstar_flag1:bitfield(7,1)))
+          elseif dstar_flag1:bitfield(5,3) == 5 then
+             flag1_tree:add(dstar_flag1, string.format('.... .%u%u%u = Control Flag: Unused', dstar_flag1:bitfield(5,1), dstar_flag1:bitfield(6,1), dstar_flag1:bitfield(7,1)))
+          elseif dstar_flag1:bitfield(5,3) == 6 then
+             flag1_tree:add(dstar_flag1, string.format('.... .%u%u%u = Control Flag: Auto reply', dstar_flag1:bitfield(5,1), dstar_flag1:bitfield(6,1), dstar_flag1:bitfield(7,1)))
+          elseif dstar_flag1:bitfield(5,3) == 7 then
+             flag1_tree:add(dstar_flag1, string.format('.... .%u%u%u = Control Flag: Repeater station control', dstar_flag1:bitfield(5,1), dstar_flag1:bitfield(6,1), dstar_flag1:bitfield(7,1)))
+          end
+
+          local dstar_flag2 = buffer(16, 1)
+          dstar_tree:add(dstar_flag2, "Flag 2: 0x" .. tostring(dstar_flag2))
+
+          local dstar_flag3 = buffer(17, 1)
+          dstar_tree:add(dstar_flag3, "Flag 3: 0x" .. tostring(dstar_flag3))
 
           local dstar_destination_repeater = buffer(18, 8)
           local destination = tostring(dstar_destination_repeater)
