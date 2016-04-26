@@ -155,25 +155,31 @@ function dstar_proto.dissector(buffer,pinfo,tree)
           dstar_tree:add(dstar_ambe_data, "AMBE Data: " .. ambe_data)
 
           local dstar_slow_data = buffer(24,3)
-          local first_byte = bit.bxor(buffer(24,1):uint(), 0x70)
-          local second_byte = bit.bxor(buffer(25,1):uint(), 0x4f)
-          local third_byte = bit.bxor(buffer(26,1):uint(), 0x93)
-          local slow_data_tree = dstar_tree:add(dstar_slow_data, "Slow data: 0x" .. tostring(dstar_slow_data) .. " scrambled / 0x" .. string.format("%02x%02x%02x", first_byte, second_byte, third_byte) .. " descrambled")
-          if first_byte >= 0x31 and first_byte <= 0x35 then
-             slow_data_tree:add(dstar_slow_data, "Type: GPS information")
-             slow_data_tree:add(dstar_slow_data, "Length: " .. string.format("%u", first_byte-0x30) .. " octets")
-             slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c", second_byte, third_byte))
-          elseif first_byte >= 0x40 and first_byte <= 0x43 then
-             slow_data_tree:add(dstar_slow_data, "Type: Text message")
-             slow_data_tree:add(dstar_slow_data, "Sequence No: " .. string.format("%u", first_byte-0x40))
-             slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c", second_byte, third_byte))
-          elseif first_byte == 0xc2 then
-             slow_data_tree:add(dstar_slow_data, "Type: Code Squelch Data")
-             slow_data_tree:add(dstar_slow_data, "ID: " .. string.format("%c", second_byte))
+          local first_byte = buffer(24,1)
+          local first_byte_descrambled = bit.bxor(first_byte:uint(), 0x70)
+          local second_byte = buffer(25,1)
+          local second_byte_descrambled = bit.bxor(second_byte:uint(), 0x4f)
+          local third_byte = buffer(26,1)
+          local third_byte_descrambled = bit.bxor(third_byte:uint(), 0x93)
+          if first_byte:uint() == 0x55 and second_byte:uint() == 0x2d and third_byte:uint() == 0x16 then
+             local slow_data_tree = dstar_tree:add(dstar_slow_data, "Slow data: 0x" .. tostring(dstar_slow_data) .. " (Synchronisation pattern)")
           else
-             slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c%c", first_byte, second_byte, third_byte))
+             local slow_data_tree = dstar_tree:add(dstar_slow_data, "Slow data: 0x" .. tostring(dstar_slow_data) .. " scrambled / 0x" .. string.format("%02x%02x%02x", first_byte_descrambled, second_byte_descrambled, third_byte_descrambled) .. " descrambled")
+             if first_byte_descrambled >= 0x31 and first_byte_descrambled <= 0x35 then
+                slow_data_tree:add(dstar_slow_data, "Type: GPS information")
+                slow_data_tree:add(dstar_slow_data, "Length: " .. string.format("%u", first_byte_descrambled-0x30) .. " octets")
+                slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c", second_byte_descrambled, third_byte_descrambled))
+             elseif first_byte_descrambled >= 0x40 and first_byte_descrambled <= 0x43 then
+                slow_data_tree:add(dstar_slow_data, "Type: Text message")
+                slow_data_tree:add(dstar_slow_data, "Sequence No: " .. string.format("%u", first_byte_descrambled-0x40))
+                slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c", second_byte_descrambled, third_byte_descrambled))
+             elseif first_byte_descrambled == 0xc2 then
+                slow_data_tree:add(dstar_slow_data, "Type: Code Squelch Data")
+                slow_data_tree:add(dstar_slow_data, "ID: " .. string.format("%c", second_byte_descrambled))
+             else
+                slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c%c", first_byte_descrambled, second_byte_descrambled, third_byte_descrambled))
+             end
           end
-
        end
 
 
