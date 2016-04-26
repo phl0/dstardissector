@@ -175,7 +175,7 @@ function dstar_proto.dissector(buffer,pinfo,tree)
                 slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c", second_byte_descrambled, third_byte_descrambled))
              elseif first_byte_descrambled == 0xc2 then
                 slow_data_tree:add(dstar_slow_data, "Type: Code Squelch Data")
-                slow_data_tree:add(dstar_slow_data, "ID: " .. string.format("%c", second_byte_descrambled))
+                slow_data_tree:add(dstar_slow_data, "ID: " .. string.format("%02x", second_byte_descrambled))
              else
                 slow_data_tree:add(dstar_slow_data, "Text: " .. string.format("%c%c%c", first_byte_descrambled, second_byte_descrambled, third_byte_descrambled))
              end
