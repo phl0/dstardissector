@@ -183,4 +183,6 @@ end
 -- load the udp.port table
 udp_table = DissectorTable.get("udp.port")
 -- register our protocol to handle udp port 10002
-udp_table:add(30001,dstar_proto)
+for i,port in ipairs{10002, 20001, 30001} do
+    udp_table:add(port, dstar_proto)
+end
