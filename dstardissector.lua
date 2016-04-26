@@ -29,6 +29,11 @@ function dstar_proto.dissector(buffer,pinfo,tree)
     pinfo.cols.protocol = "D-Star"
     local dstar_tree = tree:add(dstar_proto,buffer(),"D-Star Protocol Data (", buffer:len(), "bytes)")
 
+    if buffer:len() == 9 then
+       local xlx_keepalive = buffer(0, 8)
+       dstar_tree:add(xlx_keepalive, "XLX keepalive from: " .. string.fromhex(tostring(xlx_keepalive)))
+    end
+
     local ascii = ""
     for index = 0, 3 do
        local c = buffer(index,1):uint()
